@@ -8,36 +8,22 @@ class MovThread : public ofThread {
     // Publically available variables n shit
     MovThread() {
         loaded = false;
-        i = 0;
-        playerThread.setUseTexture(false);
-        playerThread1.setUseTexture(false);
-        playerThread2.setUseTexture(false);
+        // playerThread.setUseTexture(false);
     }
 
     void load(string movPath) {
-        mutex.lock();
+        lock();
         path = movPath;
 
-        if (i % 3 == 0) {
-            playerThreadPtr = &playerThread;
-            cout << "playerThread" << endl;
-        } else if (i % 3 == 1) {
-            playerThreadPtr = &playerThread1;
-            cout << "playerThread1" << endl;
-        } else if (i % 3 == 2) {
-            playerThreadPtr = &playerThread2;
-            cout << "playerThread2" << endl;
-        }
-
         // Empty old player object
-        if (playerThreadPtr->isLoaded()) {
-            playerThreadPtr->stop();
-            playerThreadPtr->close();
+        if (playerThread.isLoaded()) {
+            playerThread.stop();
+            playerThread.close();
             loaded = false;
         }
 
+        unlock();
         condition.signal();
-        mutex.unlock();
     }
 
     void killThread() {
@@ -53,16 +39,15 @@ class MovThread : public ofThread {
         while(isThreadRunning()) {
  
             // lock access to the resource
-            mutex.lock();
+            lock();
 
                 cout << "Thread is on! like Usher" << endl;
                 // Load next file into memory
-                playerThreadPtr->loadMovie(path);
-                if (playerThreadPtr->isLoaded()) {
+                playerThread.loadMovie(path);
+                if (playerThread.isLoaded()) {
                     cout << "We Made it Here Video Loaded!!!" << endl;
                     loaded = true;
                     playerThread.play();
-                    i++;
                     condition.wait(mutex);
                 }
             // done with the resource
@@ -70,17 +55,10 @@ class MovThread : public ofThread {
         }
     }
 
-
  
-    ofVideoPlayer    playerThread;
-    ofVideoPlayer    playerThread1;
-    ofVideoPlayer    playerThread2;
-
-    ofVideoPlayer *    playerThreadPtr;
+    ofxHapPlayer   playerThread;
 
     string          path;
-
-    int             i;
 
     bool            loaded;
 

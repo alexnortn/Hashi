@@ -21,24 +21,18 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		void exit();
-		void loadMovie(int movPointer, string loadPath);
+		void loadMovie(string loadPath);
 		void updatePtr();
 		void movPlayer();
 		int  fileNumber();
 
-		ofVideoPlayer 	player;
-        ofVideoPlayer 	player1;
-        ofVideoPlayer 	player2;
+		ofxHapPlayer 	player;
+		ofxHapPlayer 	player1;
 
-        ofVideoPlayer 	*	playMov;
-        ofVideoPlayer 	*	playMov1;
-        ofVideoPlayer 	*	playMov2;
+		ofTexture	 	movTexture;
+		ofTexture	 *	movTexturePtr;
 
-        ofVideoPlayer 	*	playMovRef;
-
-		ofTexture		movTexture;
-		ofTexture		movTexture1;
-		ofTexture		movTexture2;
+		ofxHapPlayer *	playMov;
 
 		MovThread 		movThread;
 
@@ -47,10 +41,6 @@ class ofApp : public ofBaseApp{
 		int				clipNum;
 		int				movNum;
 		int 			w, h;
-		int     		movPoint;
-
-        float 			alpha;
-        float   		alpha1;
 
 		string			vidPath;
 		

@@ -18,6 +18,7 @@ void ofApp::setup(){
 
     // start the MovThread
     movThread.startThread();    // blocking, non-verbose
+
     movThread.load("movies1/Washi-1.mov");
     movThread.load("movies1/Washi-1.mov");
     movThread.load("movies1/Washi-1.mov");
@@ -56,21 +57,21 @@ void ofApp::update(){
 	if (playMov->isLoaded()) {
 		playMov->update();
 		movThread.lock();
-		movTexture = playMov->getTexture();
+		movTexture.loadData(playMov->getPixelsRef());
 		movThread.unlock();
 	}
 
 	if (playMov1->isLoaded()) {
 		playMov1->update();
 		movThread.lock();
-		movTexture1 = playMov1->getTexture();
+		movTexture.loadData(playMov1->getPixelsRef());
 		movThread.unlock();
 	}
 
 	if (playMov2->isLoaded()) {
 		playMov2->update();
 		movThread.lock();
-		movTexture2 = *playMov2->getTexture();
+		movTexture.loadData(playMov2->getPixelsRef());
 		movThread.unlock();
 	}
 
