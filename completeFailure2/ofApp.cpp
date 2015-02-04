@@ -12,24 +12,29 @@ void ofApp::setup(){
     w = 800;
     h = 450;
 
-    movTexturePtr->allocate(w, h, GL_RGB);
-    // movTexturePtr = &movTexture;
+    movTexture.allocate(w, h, GL_RGB);
+    movTexture1.allocate(w, h, GL_RGB);
+
+    movThread.load("movies1/Washi-1.mov");
 
     // start the MovThread
     movThread.startThread();    // blocking, non-verbose
-    movThread.load("movies1/Washi-18.mov");
+
 
     // player1.loadMovie("movies/Washi-18.mov");
 
     loading = false;
 
+    // Load a movie file
+    playMov->loadMovie("movies1/Washi-1.mov");
+    playMov1->loadMovie("movies1/Washi-1.mov");
+
     // How many video files do we have?
     fileNumber();
 
-    playMov = &player;
-
-    // player.play();
-    // player1.play();
+    // Start playing the movies
+    playMov->play();
+    playMov1->play();
 
     clipNum = 0;
 
@@ -38,26 +43,38 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-	// Signal the player to update
-    playMov->update();
-    // player1.update();
-
-    // movThread.update();
-
 	if (loading) updatePtr();
 
-    movThread.lock();
-    movTexturePtr = player.getTexture();
-	movThread.unlock();
+	if (playMov->isLoaded()) {
+		playMov->update();
+		movThread.lock();
+		movTexture.loadData(playMov->getPixelsRef());
+		movThread.unlock();
+	}
 
+	if (playMov1->isLoaded()) {
+		playMov1->update();
+		movThread.lock();
+		movTexture.loadData(playMov1->getPixelsRef());
+		movThread.unlock();
+	}
 
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	ofSetColor(255, 255, 255);
-    if (playMov->isLoaded()) movTexturePtr->draw(20,20,w,h);
+	ofSetColor(255, 255, 255, alpha);
+    if (playMov->isLoaded()) {
+    	movTexture.draw(20,20,w,h);
+    	playMov->setVolume(0.0f);
+	}
+
+    ofSetColor(255, 255, 255, alpha1);
+    if (playMov1->isLoaded()) {
+    	movTexture1.draw(20,20,w,h);
+    	playMov1->setVolume(0.0f);
+	}
 
     // Draw the FPS display
     ofSetColor(255,0,0);
@@ -77,6 +94,10 @@ void ofApp::keyReleased(int key){
         
         // Increment the clip index
         (clipNum <= movNum) ? clipNum++ : clipNum = 0;
+
+        // Perform the cut / transition | switch
+        (alpha == 255) ? alpha = 0 : alpha = 255;
+        (alpha1 == 255) ? alpha1 = 0 : alpha1 = 255;
 
     }
 
@@ -100,8 +121,8 @@ void ofApp::mousePressed(int x, int y, int button){
     float position = (float) x / (float) ofGetWindowWidth();
     cout << "Setting playhead to " << ofToString(position) << endl;
 
-    if (player.isLoaded()) player.setPosition(position);
-    if (player1.isLoaded()) player1.setPosition(position);
+    if (playMov->isLoaded()) playMov->setPosition(position);
+    if (playMov1->isLoaded()) playMov1->setPosition(position);
 
 }
 
@@ -127,7 +148,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 int ofApp::fileNumber() {
     //some path, may be absolute or relative to bin/data
-    string path = "movies/"; 
+    string path = "movies1/"; 
     ofDirectory dir(path);
     //only show png files
     dir.allowExt("mov");
@@ -153,9 +174,29 @@ void ofApp::movPlayer() {
     string movCurrentPlus = ofToString(clipNum);
     vidPath = "movies1/Washi-" + movCurrentPlus + ".mov";
 
-    if (playMov->isPlaying()) playMov->stop();
+     if (clipNum % 2 == 0) {
 
-    loadMovie(vidPath);
+        movPoint = 0;
+
+        // stop playing previous clip
+        if (playMov->isPlaying()) playMov->stop();
+
+        // Load player
+        loadMovie(movPoint, vidPath);
+
+
+    } else if (clipNum % 2 == 1) {
+        cout << "clipNum mod 3 == 1" << endl;
+
+        movPoint = 1;
+
+        // stop playing previous clip
+        if (playMov1->isPlaying()) playMov1->stop();
+
+        // Load player1
+        loadMovie(movPoint, vidPath);
+
+    }
 
     string movLength = ofToString(floor(playMov->getDuration()));
     string movName = playMov->getMoviePath();
@@ -165,15 +206,22 @@ void ofApp::movPlayer() {
 
 }
 
-void ofApp::loadMovie(string loadPath) {
+void ofApp::loadMovie(int movPointer, string loadPath) {
 
-	movThread.loaded = false;
 
-	// Unload previous video object
-    if (playMov->isLoaded()) {
+    if (movPointer == 0) {
         playMov->close();
-        cout << "appSide unloading our <player>" << endl;
+        delete playMov;
+        playMov = new ofVideoPlayer();
+        cout << "appSide movPoint = 0 :: playMoveRef = &player" << endl;
+    } else if (movPointer == 1) {
+        playMov1->close();
+        delete playMov1;
+        playMov1 = new ofVideoPlayer();
     }
+        
+
+    // Let's do it with Threads!
 
     movThread.load(loadPath);  
 
@@ -183,25 +231,39 @@ void ofApp::loadMovie(string loadPath) {
 
 void ofApp::updatePtr() {
 
-	if (movThread.loaded == true) {
+    if (movThread.loaded == true) {
 
-		cout << "appSide feels the loaded video" << endl;
+        cout << "appSide feels the loaded video" << endl;
 
         // lock access to the resource
         movThread.lock();
-
-        *playMov = movThread.playerThread;
+ 
+        // copy image
+        if (movPoint == 0) {
+            playMov = movThread.playerThread;
+        } else if (movPoint == 1) {
+            playMov1 = movThread.playerThread;
+        }
 
         // Unlock access
         movThread.unlock();
 
         if (playMov->isLoaded()) {
             cout << "Yo <player appSide> is totally loaded!!!" << endl;
+            movThread.loaded = false;
             playMov->play();
         }
 
+         if (playMov1->isLoaded()) {
+            cout << "Yo <player appSide> is totally loaded!!!" << endl;
+            movThread.loaded = false;
+            playMov1->play();
+        }
+
+
         loading = false;
-	
-	}
+
+    } 
 
 }
+

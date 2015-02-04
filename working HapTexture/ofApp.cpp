@@ -4,7 +4,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	// Limit drawing to a sane rate
+    // Limit drawing to a sane rate
     ofSetVerticalSync(true);
     
     ofBackground(220, 220, 220);
@@ -12,14 +12,15 @@ void ofApp::setup(){
     w = 800;
     h = 450;
 
-    movTexturePtr->allocate(w, h, GL_RGB);
-    // movTexturePtr = &movTexture;
+    movTexture.allocate(w, h, GL_RGB);
+    movTexture.clear();
+    movTexturePtr = &movTexture;
 
     // start the MovThread
-    movThread.startThread();    // blocking, non-verbose
-    movThread.load("movies1/Washi-18.mov");
+    // movThread.startThread();    // blocking, non-verbose
+    // movThread.load("movies1/Washi-18.mov");
 
-    // player1.loadMovie("movies/Washi-18.mov");
+    player.loadMovie("movies4/Washi-1.mov");
 
     loading = false;
 
@@ -27,9 +28,10 @@ void ofApp::setup(){
     fileNumber();
 
     playMov = &player;
+    playMov1 = &player1;
 
-    // player.play();
-    // player1.play();
+    player.play();
+    player1.play();
 
     clipNum = 0;
 
@@ -38,17 +40,18 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
 
-	// Signal the player to update
+    // Signal the player to update
     playMov->update();
+    playMov1->update();
     // player1.update();
 
-    // movThread.update();
+    if (loading) updatePtr();
 
-	if (loading) updatePtr();
+    movTexturePtr = playMov->getTexture();
 
-    movThread.lock();
-    movTexturePtr = player.getTexture();
-	movThread.unlock();
+    // movThread.lock();
+    // movTexturePtr = playMov->getTexture();
+    // movThread.unlock();
 
 
 }
@@ -56,8 +59,22 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
-	ofSetColor(255, 255, 255);
-    if (playMov->isLoaded()) movTexturePtr->draw(20,20,w,h);
+    ofSetColor(255, 255, 255);
+
+    // movTexturePtr->draw(20,20,w,h);
+
+    ofShader *shader = player.getShader();
+    // the result of getShader() will be NULL if the movie is not Hap Q
+    if (shader)
+    {
+        cout << "NOT NULL" << endl;
+        shader->begin();
+    }
+    movTexturePtr->draw(0,0,w,h);
+    if (shader)
+    {
+        shader->end();
+    }
 
     // Draw the FPS display
     ofSetColor(255,0,0);
@@ -73,7 +90,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
 
-	if (key == ' ') {
+    if (key == ' ') {
         
         // Increment the clip index
         (clipNum <= movNum) ? clipNum++ : clipNum = 0;
@@ -143,7 +160,7 @@ int ofApp::fileNumber() {
 void ofApp::exit() {
  
     // stop the thread
-    movThread.stopThread();
+    // movThread.stopThread();
 
 }
 
@@ -167,15 +184,15 @@ void ofApp::movPlayer() {
 
 void ofApp::loadMovie(string loadPath) {
 
-	movThread.loaded = false;
+    // movThread.loaded = false;
 
-	// Unload previous video object
+    // Unload previous video object
     if (playMov->isLoaded()) {
         playMov->close();
         cout << "appSide unloading our <player>" << endl;
     }
 
-    movThread.load(loadPath);  
+    // movThread.load(loadPath);  
 
     loading = true;
 
@@ -183,17 +200,17 @@ void ofApp::loadMovie(string loadPath) {
 
 void ofApp::updatePtr() {
 
-	if (movThread.loaded == true) {
+    if (movThread.loaded == true) {
 
-		cout << "appSide feels the loaded video" << endl;
+        cout << "appSide feels the loaded video" << endl;
 
         // lock access to the resource
-        movThread.lock();
+        // movThread.lock();
 
-        *playMov = movThread.playerThread;
+        // *playMov = movThread.playerThread;
 
         // Unlock access
-        movThread.unlock();
+        // movThread.unlock();
 
         if (playMov->isLoaded()) {
             cout << "Yo <player appSide> is totally loaded!!!" << endl;
@@ -201,7 +218,7 @@ void ofApp::updatePtr() {
         }
 
         loading = false;
-	
-	}
+    
+    }
 
 }

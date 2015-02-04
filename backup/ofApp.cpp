@@ -12,8 +12,8 @@ void ofApp::setup(){
     w = 800;
     h = 450;
 
-    movTexturePtr->allocate(w, h, GL_RGB);
-    // movTexturePtr = &movTexture;
+    movTexture.allocate(w, h, GL_RGB);
+    movTexturePtr = &movTexture;
 
     // start the MovThread
     movThread.startThread();    // blocking, non-verbose
@@ -47,7 +47,7 @@ void ofApp::update(){
 	if (loading) updatePtr();
 
     movThread.lock();
-    movTexturePtr = player.getTexture();
+    *movTexturePtr = (playMov->getTexture());
 	movThread.unlock();
 
 
