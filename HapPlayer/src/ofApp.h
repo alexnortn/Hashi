@@ -2,7 +2,6 @@
 
 #include "ofMain.h"
 #include "ofxHapPlayer.h"
-#include "MovThread.h"
 
 class ofApp : public ofBaseApp{
 
@@ -20,29 +19,50 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
-		void exit();
-		void loadMovie(string loadPath);
-		void updatePtr();
-		void movPlayer();
 		int  fileNumber();
+		int  songNumber();
 
-		ofVideoPlayer 	player;
-		ofVideoPlayer 	player1;
+		ofxHapPlayer 	player1;
+		ofxHapPlayer 	player2;
+		ofxHapPlayer 	player3;
+		ofxHapPlayer 	player4;
 
-		ofTexture		movTexture;
+		ofTexture	 	movTexture;
+		ofTexture	 *	movTexturePtr;
 
-		ofVideoPlayer *	playMov;
+		ofxHapPlayer *	playMov1;
+		ofxHapPlayer *	playMov2;
+		ofxHapPlayer *	playMov3;
+		ofxHapPlayer *	playMov4;
 
-		ofTexture texture;  
+		ofxHapPlayer *	playMovRef;
 
-		MovThread 		movThread;
+		bool			bSendSerialMessage;			// a flag for sending serial
+		char			bytesRead[3];				// data from serial, we will be trying to read 3
+		char			bytesReadString[4];			// a string needs a null terminator, so we need 3 + 1 bytes
+		int				nBytesRead;					// how much did we read?
+		int				nTimesRead;					// how many times did we read?
+		float			readTime;					// when did we last read?				
+		
+		ofSerial		serial;
 
-		bool			loading;
+		string 			serialData;
 
 		int				clipNum;
 		int				movNum;
+		int				songNum;
 		int 			w, h;
+		int				numberMu;
 
-		string			vidPath;
+		float 				* fftSmoothed;
+		// we will draw a rectangle, bouncing off the wall:
+		float 				px, py, vx, vy;
+
+		int nBandsToGet;
+		float prevx, prevy;
+
+		ofSoundPlayer 		song;
+
+		string musicLoad;
 		
 };
